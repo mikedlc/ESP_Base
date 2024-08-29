@@ -14,8 +14,8 @@
 
 
 //Device Information
-const char* ProgramID = "OTA Test";
-const char* SensorType = "None... OTA";
+const char* ProgramID = "ESP_Base";
+const char* SensorType = "ESP_Base";
 const char* mqtt_topic = "MYTOPIC";
 const char* mqtt_unit = "Units";
 const char* mqtt_server_init = "homeassistant.local";
@@ -28,13 +28,13 @@ const char* mqtt_server_init = "homeassistant.local";
 #include <ESP8266WiFi.h> // Uncomment for D1 Mini ESP8266
 #include <ESP8266mDNS.h> // Uncomment for D1 mini ES8266
 #include <WiFiUdp.h> // Uncomment for D1 Mini ESP8266
-void printWifiStatus();
 //const char *ssid =	"LMWA-PumpHouse";		// cannot be longer than 32 characters!
 //const char *pass =	"ds42396xcr5";		//
 const char *ssid =	"WiFiFoFum";		// cannot be longer than 32 characters!
 const char *password =	"6316EarlyGlow";		//
 WiFiClient wifi_client;
 String wifistatustoprint;
+void printWifiStatus();
 
 //For 1.3in displays
 #include <SPI.h>
@@ -68,10 +68,15 @@ unsigned long lastMsg = 0;
 char msg[MSG_BUFFER_SIZE];
 int value = 0;
 
+// ********* Put your program's custom stuff below here ********** //
+
+
+// ********* Put your program's custom stuff above here ********** //
+
 void setup() {
   Serial.begin(9600);
   delay(1000);
-  Serial.println("Booting");
+  Serial.println("\n\nBooting");
   Serial.println(__FILE__);
   
   //1.3" OLED Setup
@@ -82,13 +87,13 @@ void setup() {
 
   // Clear the buffer & start drawing
   display.clearDisplay(); // Clear display
-    display.setTextColor(SH110X_WHITE);
+  display.setTextColor(SH110X_WHITE);
   display.drawPixel(64, 64, SH110X_WHITE); // draw a single pixel
   display.display();   // Show the display buffer on the hardware.
   delay(2000); // Wait a couple
   display.clearDisplay(); // Clear display
 
-  //Wifi Stuff
+  //Wifi Setup Stuff
   WiFi.mode(WIFI_STA);
   if (WiFi.status() != WL_CONNECTED) {
     
@@ -109,8 +114,8 @@ void setup() {
     Serial.print("Connecting to ");
     Serial.print(ssid);
     Serial.println("...");
-    WiFi.setHostname(ProgramID);
     WiFi.begin(ssid, password);
+    WiFi.setHostname(ProgramID);
 
     //delay 8 seconds for effect
     delay(8000);
@@ -121,7 +126,7 @@ void setup() {
 
     display.clearDisplay();
     display.setCursor(0, 0);
-display.println("Booting Program ID:");
+    display.println("Booting Program ID:");
     display.println(ProgramID);
     display.println("Sensor Type:");
     display.println(SensorType);
@@ -135,6 +140,8 @@ display.println("Booting Program ID:");
 
   }
 
+  //OTA Setup Stuff
+  if(1){
   // Port defaults to 8266
   // ArduinoOTA.setPort(8266);
 
@@ -174,6 +181,7 @@ display.println("Booting Program ID:");
     else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
     else if (error == OTA_END_ERROR) Serial.println("End Failed");
   });
+  }//End OTA Code Wrapper
 
   //MQTT Setup
   pubsub_client.setServer(mqtt_server, 1883);
@@ -184,17 +192,20 @@ display.println("Booting Program ID:");
 
   //Report done booting
   Serial.println("Ready");
+  Serial.print("Hostname: ");
+  Serial.println(WiFi.getHostname());
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
+  
   delay(5000);
 }
 
 void loop() {
-  ArduinoOTA.handle();
 
+  ArduinoOTA.handle(); // Start listening for OTA Updates
+
+  //Calculate Uptime
   currentMillis = millis();
-
-  //Calculat Uptime
   uptimeSeconds=currentMillis/1000;
   uptimeHours= uptimeSeconds/3600;
   uptimeDays=uptimeHours/24;
@@ -203,17 +214,24 @@ void loop() {
   uptimeSeconds=secsRemaining%60;
   sprintf(uptimeTotal,"Uptime %02dD:%02d:%02d:%02d",uptimeDays,uptimeHours,uptimeMinutes,uptimeSeconds);
 
-//buffer next display payload
+
+  // *************** Put your program below here *********************//
+
+  // *************** Put your program above here *********************//
+
+
+  //buffer & print next display payload
   display.clearDisplay();
   display.setTextSize(1);
   display.setCursor(0, 0);
   display.print("Sensor: "); display.println(SensorType);
   display.print("Prog.ID: "); display.println(ProgramID);
+  display.print("Hostname: "); display.println(WiFi.getHostname());
   display.print("IP: "); display.println(WiFi.localIP());
   display.print(uptimeTotal);
   display.display();
 
-  sendMQTT(0);
+  sendMQTT(0); //Update MQTT
 
   delay(1000);
 }
