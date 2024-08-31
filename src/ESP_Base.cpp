@@ -16,9 +16,11 @@
 //Device Information
 const char* ProgramID = "ESP_Base";
 const char* SensorType = "ESP_Base";
-const char* mqtt_topic = "MYTOPIC";
-const char* mqtt_unit = "Units";
-const char* mqtt_server_init = "homeassistant.local";
+const char* mqtt_topic = "dummytopic01";
+const char* mqtt_unit = "Amps";
+const char* mqtt_server_init = "192.168.30.121";
+const char* mqtt_user = "mqttuser";
+const char* mqtt_password = "Lafayette123!";
 
 //OTA Stuff
 #include <ArduinoOTA.h>
@@ -28,10 +30,10 @@ const char* mqtt_server_init = "homeassistant.local";
 #include <ESP8266WiFi.h> // Uncomment for D1 Mini ESP8266
 #include <ESP8266mDNS.h> // Uncomment for D1 mini ES8266
 #include <WiFiUdp.h> // Uncomment for D1 Mini ESP8266
-//const char *ssid =	"LMWA-PumpHouse";		// cannot be longer than 32 characters!
-//const char *pass =	"ds42396xcr5";		//
-const char *ssid =	"WiFiFoFum";		// cannot be longer than 32 characters!
-const char *password =	"6316EarlyGlow";		//
+const char *ssid =	"LMWA-PumpHouse";		// cannot be longer than 32 characters!
+const char *password =	"ds42396xcr5";		//
+//const char *ssid =	"WiFiFoFum";		// cannot be longer than 32 characters!
+//const char *password =	"6316EarlyGlow";		//
 WiFiClient wifi_client;
 String wifistatustoprint;
 void printWifiStatus();
@@ -231,7 +233,7 @@ void loop() {
   display.print(uptimeTotal);
   display.display();
 
-  sendMQTT(0); //Update MQTT
+  sendMQTT(21); //Update MQTT
 
   delay(1000);
 }
@@ -278,7 +280,7 @@ void reconnect() {
     String clientId = "PUMPSENSOR-";
     clientId += String(random(0xffff), HEX);
     // Attempt to connect
-    if (pubsub_client.connect(clientId.c_str(), "mqttuser", "Quik5ilver7")) {
+    if (pubsub_client.connect(clientId.c_str(), mqtt_user, mqtt_password)) {
       Serial.println("connected");
     } else {
       Serial.print("failed, rc=");
@@ -301,12 +303,12 @@ void sendMQTT(double mqtt_payload) {
     lastMsg = now;
     ++value;
 
-    Serial.println("Sending alert via MQTT...");
+    Serial.println("\nSending alert via MQTT...");
     Serial.print("Topic: "); Serial.print(mqtt_topic); Serial.print(" Payload: "); Serial.print(mqtt_payload); Serial.print(" Unit: "); Serial.println(mqtt_unit);
 
     //msg variable contains JSON string to send to MQTT server
     //snprintf (msg, MSG_BUFFER_SIZE, "\{\"amps\": %4.1f, \"humidity\": %4.1f\}", temperature, humidity);
-    snprintf (msg, MSG_BUFFER_SIZE, "{\"%s\" %4.2f}", mqtt_unit, mqtt_payload);
+    snprintf (msg, MSG_BUFFER_SIZE, "{\"%s\": %4.2f}", mqtt_unit, mqtt_payload);
 
     Serial.print("Publishing message: "); Serial.println(msg);
     pubsub_client.publish(mqtt_topic, msg);
