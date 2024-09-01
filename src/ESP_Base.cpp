@@ -183,14 +183,17 @@ void setup() {
     else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
     else if (error == OTA_END_ERROR) Serial.println("End Failed");
   });
+
+    //Start OTA
+  ArduinoOTA.begin();
+  Serial.println("OTA Listenerer Started");
+
   }//End OTA Code Wrapper
 
   //MQTT Setup
   pubsub_client.setServer(mqtt_server, 1883);
   pubsub_client.setCallback(callback);
 
-  //Start OTA
-  ArduinoOTA.begin();
 
   //Report done booting
   Serial.println("Ready");
